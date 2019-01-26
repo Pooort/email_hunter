@@ -7,8 +7,5 @@ def main():
         for company in data:
             CompanyRepo.create_or_update(company)
 
-    print('!')
-
-
 if __name__ == '__main__':
     main()
