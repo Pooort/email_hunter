@@ -51,6 +51,6 @@ class AngelManager:
                 'stage': startup.select('div.column.hidden_column.stage > div.value')[0].text.strip(),
                 'total_raised': startup.select('div.column.hidden_column.raised > div.value')[0].text.strip()
             }
-            if company_data['stage'] != 'Acquired':
+            if company_data['stage'] != 'Acquired' and company_data['website']:
                 companies_data.append(company_data)
         return companies_data

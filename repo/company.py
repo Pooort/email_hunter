@@ -5,8 +5,8 @@ from db.models import Company, Email
 class CompanyRepo:
 
     @staticmethod
-    def get_ids():
-        return session.query(Company.id).all()
+    def get_all():
+        return session.query(Company).all()
 
     @staticmethod
     def create_or_update(data):

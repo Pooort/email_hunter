@@ -23,5 +23,14 @@ class Email(Base):
     __tablename__ = 'email'
 
     id = Column(Integer(), primary_key=True)
-    name = Column(Text())
     company_id = Column(Integer, ForeignKey('company.id'))
+    value = Column(Text())
+    first_name = Column(Text())
+    last_name = Column(Text())
+    position = Column(Text())
+    seniority = Column(Text())
+    department = Column(Text())
+    linkedin = Column(Text())
+    twitter = Column(Text())
+    phone_number = Column(Text())
+    type = Column(Text())
