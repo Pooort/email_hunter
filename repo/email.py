@@ -7,6 +7,10 @@ from db.models import Email
 class EmailRepo:
 
     @staticmethod
+    def get_fields():
+        return [key for key in Email.__dict__.keys() if not key.startswith('_') and key != 'id']
+
+    @staticmethod
     def filter_dict(data):
         d = deepcopy(data)
         company_fields = dir(Email)
