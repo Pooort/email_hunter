@@ -34,3 +34,10 @@ class Email(Base):
     twitter = Column(Text())
     phone_number = Column(Text())
     type = Column(Text())
+
+class Location(Base):
+    __tablename__ = 'location'
+
+    id = Column(Integer(), primary_key=True)
+    location_id = Column(Text())
+    display_name = Column(Text())

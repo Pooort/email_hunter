@@ -3,3 +3,4 @@ requests==2.21.0
 python-decouple==3.1
 beautifulsoup4==4.7.1
 tqdm==4.30.0
+selenium==3.141.0

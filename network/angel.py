@@ -1,10 +1,14 @@
+import itertools
+import string
 import time
+import json
 
 import requests
 
 from time import sleep
 from bs4 import BeautifulSoup
 from helpers import get_web_driver, wait_function
+from repo.location import LocationRepo
 from settings import COMPANYTYPE
 
 class AngelManager:
@@ -14,14 +18,66 @@ class AngelManager:
     boundaries = []
 
     @classmethod
-    def get_boundaries(cls, raised_min=0, raised_max=100000000):
-        cls.driver.get('https://angel.co/companies?company_types[]=Startup&raised[min]={}&raised[max]={}'.format(0, 100000000000))
-        companies_count = int(cls.driver.find_element_by_xpath('//*[@id="root"]/div[5]/div[2]/div/div[2]/div[2]/div[1]/div[1]').text.split(' ')[0].replace(',', ''))
+    def get_locations(cls):
+        for items in itertools.combinations(string.ascii_lowercase, 2):
+            cls.driver.get('https://angel.co/autocomplete/new_tags?query={}&tag_type=LocationTag&new_taggable_id=&new_taggable_type=&new_taggable_field=&exclude_new_places=true'.format(''.join(items)))
+            yield AngelManager.parse_locations(cls.driver.page_source)
 
-#cls.driver.find_element_by_xpath('//div[@class="more disabled"]')
-#cls.driver.find_element_by_xpath('//div[@class="more"]')
+    @staticmethod
+    def parse_locations(data):
+        soup = BeautifulSoup(data, 'html.parser')
+        locations_json = json.loads(soup.find("body").text)
+        return locations_json
+
+
     @classmethod
-    def get_companies_data(cls, raised_min=1, raised_max=100000000):
+    def get_companies_data_by_location(cls):
+        for location in LocationRepo.get_all():
+            cls.driver.get(
+                'https://angel.co/companies?company_types[]=Startup&raised[min]=0&raised[max]=0&locations[]={}-{}'.format(location.location_id, location.display_name.replace(' ', '+')))
+            companies_count = int(cls.driver.find_element_by_xpath(
+                '//*[@id="root"]/div[5]/div[2]/div/div[2]/div[2]/div[1]/div[1]').text.split(' ')[
+                                      0].replace(',', ''))
+
+            if companies_count == 0:
+                continue
+
+            @wait_function
+            def wait_companies():
+                cls.driver.find_element_by_xpath('//div[@class="base startup"]')
+            try:
+                wait_companies()
+            except:
+                continue
+            while True:
+                try:
+                    wait_button = cls.driver.find_element_by_xpath('//div[@class="more"]')
+                    wait_button.click()
+                    sleep(1)
+                except:
+                    break
+                SCROLL_PAUSE_TIME = 0.5
+
+                # Get scroll height
+                last_height = cls.driver.execute_script("return document.body.scrollHeight")
+
+                while True:
+                    # Scroll down to bottom
+                    cls.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+                    # Wait to load page
+                    time.sleep(SCROLL_PAUSE_TIME)
+
+                    # Calculate new scroll height and compare with last scroll height
+                    new_height = cls.driver.execute_script("return document.body.scrollHeight")
+                    if new_height == last_height:
+                        break
+                    last_height = new_height
+            companies_data = AngelManager.parse_companids_data(cls.driver.page_source)
+            yield companies_data
+
+    @classmethod
+    def get_companies_data_by_price(cls, raised_min=1, raised_max=100000000):
         cls.driver.get('https://angel.co/companies?company_types[]=Startup&raised[min]={}&raised[max]={}'.format(raised_min, raised_max))
         companies_count = int(cls.driver.find_element_by_xpath('//*[@id="root"]/div[5]/div[2]/div/div[2]/div[2]/div[1]/div[1]').text.split(' ')[0].replace(',', ''))
         if companies_count > 400 and raised_max != raised_min:
